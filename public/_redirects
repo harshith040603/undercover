@@ -1,5 +1,0 @@
-# SPA fallback: route unknown paths to index.html so client-side
-# routing (react-router) works on hard refresh / deep links.
-# Cloudflare Pages serves real static files first, so /assets/*,
-# /sw.js, /manifest.webmanifest and /favicon.svg are unaffected.
-/*    /index.html    200
