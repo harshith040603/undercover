@@ -28,7 +28,7 @@
   --color-glass-edge: oklch(1 0 0 / 12%);
 
   /* Display + body type */
-  --font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --font-display: 'Bitcount Single', 'Archivo', 'Arial Narrow', system-ui, sans-serif;
   --font-body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Mobile-tuned radii */
@@ -130,6 +130,12 @@
     background: var(--color-glass);
     border: 1px solid var(--color-glass-edge);
     backdrop-filter: blur(12px);
+  }
+
+  /* Bitcount Single variation axes for all display type */
+  .font-display {
+    font-optical-sizing: auto;
+    font-variation-settings: 'slnt' 0, 'CRSV' 0.5, 'ELSH' 0, 'ELXP' 0;
   }
 }
 

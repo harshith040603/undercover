@@ -25,15 +25,19 @@ export function Vote() {
   const totalCast = Object.values(counts).reduce((a, b) => a + b, 0);
   const livingCount = game.players.filter((p) => p.alive).length;
 
+  // Each living player votes at most once and never for themselves, so the
+  // table can cast N votes total and any one player can receive at most N−1.
+  const perPlayerMax = Math.max(0, livingCount - 1);
+  const canAdd = (id: string) =>
+    totalCast < livingCount && (counts[id] ?? 0) < perPlayerMax;
+
   // Highlight the current leader(s) so the host can sanity-check the count.
   const max = Math.max(0, ...Object.values(counts));
   const leaders = max > 0 ? targets.filter((p) => (counts[p.id] ?? 0) === max).map((p) => p.id) : [];
 
   const bump = (id: string, delta: number) => {
-    setCounts((c) => {
-      const next = Math.max(0, (c[id] ?? 0) + delta);
-      return { ...c, [id]: next };
-    });
+    if (delta > 0 && !canAdd(id)) return;
+    setCounts((c) => ({ ...c, [id]: Math.max(0, (c[id] ?? 0) + delta) }));
     haptic('tick');
   };
 
@@ -62,6 +66,7 @@ export function Vote() {
             player={p}
             count={counts[p.id] ?? 0}
             leading={leaders.includes(p.id)}
+            canAdd={canAdd(p.id)}
             onAdd={() => bump(p.id, 1)}
             onSub={() => bump(p.id, -1)}
           />
@@ -84,12 +89,14 @@ function CountRow({
   player,
   count,
   leading,
+  canAdd,
   onAdd,
   onSub,
 }: {
   player: Player;
   count: number;
   leading: boolean;
+  canAdd: boolean;
   onAdd: () => void;
   onSub: () => void;
 }) {
@@ -100,7 +107,11 @@ function CountRow({
       }`}
     >
       {/* Tap the name area to add a vote — the fast path. */}
-      <button onClick={onAdd} className="flex-1 py-1 text-left text-base active:opacity-70">
+      <button
+        onClick={onAdd}
+        disabled={!canAdd}
+        className="flex-1 py-1 text-left text-base active:opacity-70 disabled:active:opacity-100"
+      >
         {player.name}
       </button>
 
@@ -117,7 +128,7 @@ function CountRow({
         key={count}
         initial={{ scale: 1.3 }}
         animate={{ scale: 1 }}
-        className={`w-7 text-center text-xl font-bold tabular-nums ${
+        className={`w-7 text-center font-display text-2xl tabular-nums ${
           leading ? 'text-undercover' : 'text-white/80'
         }`}
       >
@@ -126,8 +137,9 @@ function CountRow({
 
       <button
         onClick={onAdd}
+        disabled={!canAdd}
         aria-label={`One more vote for ${player.name}`}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-xl active:bg-white/20"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-xl active:bg-white/20 disabled:opacity-25"
       >
         +
       </button>
