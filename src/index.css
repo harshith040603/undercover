@@ -4,16 +4,24 @@
    Undercover — Neon-Noir Interrogation theme tokens
    ─────────────────────────────────────────────────────────── */
 @theme {
-  /* Semantic role colors */
-  --color-civilian: #22d3ee; /* cyan */
-  --color-undercover: #f43f5e; /* magenta/red */
-  --color-white: #f5f5f4; /* off-white (Mr. White) */
+  /* ── Palette: deep indigo / electric blue ──
+     Base colors (dark): Black #02010a · Prussian Blue #04052e ·
+     Deep Twilight #140152 · Navy #22007c · Navy Electric #0d00a4.
+     Accents below are brightened tints of the same family so text
+     stays legible on the near-black background. */
 
-  /* Surfaces */
-  --color-noir: #0a0a0b; /* near-black background */
-  --color-noir-2: #141417; /* raised surface */
-  --color-noir-3: #1d1d22; /* card surface */
-  --color-amber: #f59e0b; /* spotlight / neutral accent */
+  /* Semantic role colors */
+  --color-civilian: #5350ff; /* electric indigo — primary / civilian */
+  --color-undercover: #ff2e7e; /* hot magenta — danger / imposter */
+  --color-white: #f5f5f4; /* off-white (Mr. White, the blank) */
+
+  /* Surfaces (exact supplied palette) */
+  --color-noir: #02010a; /* Black — app background */
+  --color-noir-2: #04052e; /* Prussian Blue — raised surface */
+  --color-noir-3: #140152; /* Deep Twilight — card surface */
+  --color-noir-4: #22007c; /* Navy — active / elevated surface */
+  --color-electric: #0d00a4; /* Navy Electric — deep glow */
+  --color-amber: #6c8cff; /* luminous azure — spotlight / active accent */
 
   /* Glass */
   --color-glass: oklch(1 0 0 / 6%);
@@ -109,11 +117,11 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  /* Warm spotlight glow behind a focal element */
+  /* Electric spotlight glow behind a focal element */
   .spotlight {
     background: radial-gradient(
       ellipse 80% 60% at 50% 35%,
-      oklch(0.8 0.12 75 / 0.16),
+      color-mix(in oklab, var(--color-electric), transparent 78%),
       transparent 70%
     );
   }

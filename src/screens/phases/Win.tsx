@@ -12,13 +12,13 @@ const WIN_META: Record<Winner, { title: string; sub: string; color: string; bg: 
     title: 'CASE CLOSED',
     sub: 'The Civilians rooted out every imposter.',
     color: 'var(--color-civilian)',
-    bg: 'radial-gradient(ellipse at center, rgba(34,211,238,0.18), transparent 70%)',
+    bg: 'radial-gradient(ellipse at center, rgba(83,80,255,0.20), transparent 70%)',
   },
   imposters: {
     title: 'THEY GOT AWAY',
     sub: 'The imposters reached parity. Nobody saw it coming.',
     color: 'var(--color-undercover)',
-    bg: 'radial-gradient(ellipse at center, rgba(244,63,94,0.20), transparent 70%)',
+    bg: 'radial-gradient(ellipse at center, rgba(255,46,126,0.22), transparent 70%)',
   },
   white: {
     title: 'THE BLANK WINS',

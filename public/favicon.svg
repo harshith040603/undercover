@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0A0A0B"/>
-  <circle cx="256" cy="200" r="120" fill="none" stroke="#22D3EE" stroke-width="10" opacity="0.25"/>
+  <rect width="512" height="512" rx="112" fill="#02010a"/>
+  <rect width="512" height="512" rx="112" fill="#140152" opacity="0.5"/>
+  <circle cx="256" cy="200" r="120" fill="none" stroke="#5350ff" stroke-width="10" opacity="0.45"/>
   <text x="256" y="250" font-family="Arial Narrow, Arial, sans-serif" font-size="150" font-weight="900"
         text-anchor="middle" fill="#F5F5F4">U</text>
-  <rect x="156" y="300" width="200" height="34" rx="17" fill="#F43F5E"/>
-  <circle cx="256" cy="200" r="60" fill="#F43F5E" opacity="0.0"/>
+  <rect x="156" y="300" width="200" height="34" rx="17" fill="#ff2e7e"/>
 </svg>
