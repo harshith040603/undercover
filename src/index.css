@@ -29,7 +29,7 @@
 
   /* Display + body type */
   --font-display: 'Bitcount Single', 'Archivo', 'Arial Narrow', system-ui, sans-serif;
-  --font-body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Cormorant Garamond', ui-serif, Georgia, system-ui, serif;
 
   /* Mobile-tuned radii */
   --radius-card: 1.25rem;
@@ -62,6 +62,9 @@
     background-color: var(--color-noir);
     color: var(--color-white);
     font-family: var(--font-body);
+    /* Cormorant runs light at 400 — nudge up for small mobile UI */
+    font-weight: 500;
+    font-optical-sizing: auto;
     /* Disable text selection / callout during pass-and-play */
     -webkit-user-select: none;
     user-select: none;
