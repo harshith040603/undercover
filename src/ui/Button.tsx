@@ -10,12 +10,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANTS: Record<Variant, string> = {
-  primary:
-    'bg-civilian text-noir font-semibold shadow-[0_0_30px_-8px_var(--color-civilian)] active:brightness-90',
-  danger:
-    'bg-undercover text-white font-semibold shadow-[0_0_30px_-8px_var(--color-undercover)] active:brightness-90',
-  ghost: 'bg-transparent text-white/80 active:bg-white/10',
-  glass: 'glass text-white active:brightness-125',
+  primary: 'bg-civilian text-noir font-semibold active:brightness-95',
+  danger: 'bg-undercover text-white font-semibold active:brightness-95',
+  ghost: 'bg-transparent text-white/70 active:bg-white/5',
+  glass: 'glass text-white active:brightness-110',
 };
 
 /** Big, thumb-friendly touch target. Min height 56px (mobile-first). */

@@ -4,24 +4,23 @@
    Undercover — Neon-Noir Interrogation theme tokens
    ─────────────────────────────────────────────────────────── */
 @theme {
-  /* ── Palette: deep indigo / electric blue ──
-     Base colors (dark): Black #02010a · Prussian Blue #04052e ·
-     Deep Twilight #140152 · Navy #22007c · Navy Electric #0d00a4.
-     Accents below are brightened tints of the same family so text
-     stays legible on the near-black background. */
+  /* ── Palette: warm sunset on carbon ──
+     Banana Cream #fff05a · Golden Pollen #ffd25a · Sandy Brown #ffaa5a ·
+     Vibrant Coral #ff785a · Carbon Black #191919.
+     Maps naturally to roles: gold = civilian, coral = imposter. */
 
   /* Semantic role colors */
-  --color-civilian: #5350ff; /* electric indigo — primary / civilian */
-  --color-undercover: #ff2e7e; /* hot magenta — danger / imposter */
+  --color-civilian: #ffd25a; /* Golden Pollen — primary / civilian */
+  --color-undercover: #ff785a; /* Vibrant Coral — danger / imposter */
   --color-white: #f5f5f4; /* off-white (Mr. White, the blank) */
 
-  /* Surfaces (exact supplied palette) */
-  --color-noir: #02010a; /* Black — app background */
-  --color-noir-2: #04052e; /* Prussian Blue — raised surface */
-  --color-noir-3: #140152; /* Deep Twilight — card surface */
-  --color-noir-4: #22007c; /* Navy — active / elevated surface */
-  --color-electric: #0d00a4; /* Navy Electric — deep glow */
-  --color-amber: #6c8cff; /* luminous azure — spotlight / active accent */
+  /* Surfaces — carbon base + clean neutral steps */
+  --color-noir: #191919; /* Carbon Black — app background */
+  --color-noir-2: #202020; /* raised surface */
+  --color-noir-3: #272727; /* card surface */
+  --color-noir-4: #313131; /* active / elevated surface */
+  --color-cream: #fff05a; /* Banana Cream — bright pop / wins */
+  --color-amber: #ffaa5a; /* Sandy Brown — spotlight / active accent */
 
   /* Glass */
   --color-glass: oklch(1 0 0 / 6%);
@@ -109,22 +108,22 @@
     padding-right: max(env(safe-area-inset-right), 1rem);
   }
 
-  /* Film grain overlay */
+  /* Film grain overlay — whisper-light for a clean finish */
   .grain::after {
     content: '';
     position: fixed;
     inset: 0;
     pointer-events: none;
-    opacity: 0.04;
+    opacity: 0.015;
     z-index: 50;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  /* Electric spotlight glow behind a focal element */
+  /* Warm spotlight glow behind a focal element */
   .spotlight {
     background: radial-gradient(
       ellipse 80% 60% at 50% 35%,
-      color-mix(in oklab, var(--color-electric), transparent 78%),
+      color-mix(in oklab, var(--color-amber), transparent 86%),
       transparent 70%
     );
   }
