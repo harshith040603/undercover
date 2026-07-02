@@ -3,14 +3,36 @@ import { motion } from 'framer-motion';
 import { Screen } from '@/ui/Screen';
 import { Button } from '@/ui/Button';
 import { useGame } from '@/store/gameStore';
+import { haptic } from '@/lib/haptics';
 
 const LETTERS = 'UNDERCOVER'.split('');
 // The signature: one letter of the title arrives pre-redacted.
 const REDACTED_INDEX = 6; // the "O"
 
+/** Stamp-chip toggle for opting into a special role before starting. */
+function RoleChip({ label, on, onTap }: { label: string; on: boolean; onTap: () => void }) {
+  return (
+    <button
+      onClick={() => {
+        haptic('tick');
+        onTap();
+      }}
+      aria-pressed={on}
+      className={`rounded-[0.3rem] border-2 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition ${
+        on
+          ? 'border-ink bg-ink text-paper shadow-[0.15rem_0.15rem_0_rgba(43,36,22,0.25)]'
+          : 'border-dashed border-ink/35 text-ink/55'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 export function Home() {
   const nav = useNavigate();
   const activeGame = useGame((s) => s.game);
+  const { draft, setDraft } = useGame();
 
   return (
     <Screen spotlight className="items-center justify-between pb-8">
@@ -79,6 +101,30 @@ export function Home() {
             Reopen case — resume game
           </Button>
         )}
+
+        <div className="flex flex-col items-center gap-2 pb-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-ink/45">
+            Special roles
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <RoleChip
+              label="Revenger"
+              on={draft.revenger > 0}
+              onTap={() => setDraft({ revenger: draft.revenger > 0 ? 0 : 1 })}
+            />
+            <RoleChip
+              label="Serial Killer"
+              on={draft.killer > 0}
+              onTap={() => setDraft({ killer: draft.killer > 0 ? 0 : 1 })}
+            />
+            <RoleChip
+              label="Lovers"
+              on={draft.lovers}
+              onTap={() => setDraft({ lovers: !draft.lovers })}
+            />
+          </div>
+        </div>
+
         <Button onClick={() => nav('/players')}>New game</Button>
         <div className="flex gap-3">
           <Button variant="ghost" onClick={() => nav('/how')}>

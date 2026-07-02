@@ -92,11 +92,12 @@ export function RolesPack() {
 
   // Auto-assign the balanced ratio whenever the player count changes
   // (PRD §2.5). The host can still override with the steppers afterwards.
-  // Specials reset to opt-in defaults so the base ratio stays valid.
+  // Special-role opt-ins (possibly made on the Home screen) are preserved;
+  // the validity check below flags any combination that doesn't fit.
   useEffect(() => {
     if (draft.countFor !== total) {
       const d = defaultDistribution(total);
-      setDraft({ undercover: d.undercover, white: d.white, revenger: 0, killer: 0, countFor: total });
+      setDraft({ undercover: d.undercover, white: d.white, countFor: total });
     }
   }, [total, draft.countFor, setDraft]);
 
