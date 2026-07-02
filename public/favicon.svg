@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#191919"/>
-  <circle cx="256" cy="200" r="120" fill="none" stroke="#ffd25a" stroke-width="10" opacity="0.5"/>
-  <text x="256" y="250" font-family="Arial Narrow, Arial, sans-serif" font-size="150" font-weight="900"
-        text-anchor="middle" fill="#F5F5F4">U</text>
-  <rect x="156" y="300" width="200" height="34" rx="17" fill="#ff785a"/>
+  <rect width="512" height="512" rx="112" fill="#E7D69F"/>
+  <rect x="76" y="76" width="360" height="360" rx="24" fill="#F7F0DC" stroke="#2B2416" stroke-width="10" stroke-opacity="0.25"/>
+  <text x="256" y="286" font-family="Arial Narrow, Arial, sans-serif" font-size="200" font-weight="900"
+        text-anchor="middle" fill="#2B2416">U</text>
+  <rect x="146" y="318" width="220" height="40" rx="6" fill="#2B2416"/>
+  <rect x="120" y="120" width="150" height="46" rx="8" fill="none" stroke="#B3311F" stroke-width="12" transform="rotate(-8 195 143)"/>
 </svg>

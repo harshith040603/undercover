@@ -31,16 +31,16 @@ export function Clues() {
       <TopBar title={`Round ${game.round} · Clues`} />
 
       <div className="mt-2 text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-white/40">Now speaking</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-ink/50">On the record</p>
         <motion.h2
           key={current?.id}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="mt-2 font-display text-5xl font-extrabold text-amber"
+          className="mt-2 inline-block border-b-4 border-undercover font-display text-5xl leading-tight text-ink"
         >
           {current?.name}
         </motion.h2>
-        <p className="mt-2 text-sm text-white/45">
+        <p className="mt-3 text-sm text-ink/60">
           {game.config.rules.oneWordMode
             ? 'Say exactly ONE word describing your secret word.'
             : 'Give one short clue about your secret word.'}
@@ -54,22 +54,26 @@ export function Clues() {
           return (
             <div
               key={p.id}
-              className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition ${
+              className={`flex items-center gap-3 rounded-card border px-4 py-3 transition ${
                 active
-                  ? 'border-amber bg-amber/15'
+                  ? 'border-2 border-ink bg-manila-2'
                   : done
-                    ? 'border-transparent bg-white/[0.02] opacity-50'
-                    : 'border-glass-edge bg-glass'
+                    ? 'border-transparent bg-ink/[0.04] opacity-55'
+                    : 'sheet'
               }`}
             >
-              <span className="w-5 text-center text-sm tabular-nums text-white/30">{i + 1}</span>
-              <span className="flex-1 text-base">{p.name}</span>
-              {done && <span className="text-civilian">✓</span>}
+              <span className="w-7 text-center text-sm font-bold tabular-nums text-ink/40">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span className={`flex-1 text-base ${done ? 'line-through decoration-ink/50' : 'font-bold'}`}>
+                {p.name}
+              </span>
+              {done && <span className="font-bold text-civilian">✓</span>}
               {active && (
                 <motion.span
-                  animate={{ opacity: [1, 0.3, 1] }}
+                  animate={{ opacity: [1, 0.25, 1] }}
                   transition={{ repeat: Infinity, duration: 1.2 }}
-                  className="text-amber"
+                  className="text-undercover"
                 >
                   ●
                 </motion.span>
@@ -79,7 +83,7 @@ export function Clues() {
         })}
       </div>
 
-      <Button onClick={advance}>{isLast ? 'Everyone spoke → Debate' : 'Next speaker'}</Button>
+      <Button onClick={advance}>{isLast ? 'Everyone spoke → debate' : 'Next speaker'}</Button>
     </Screen>
   );
 }

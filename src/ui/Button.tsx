@@ -9,14 +9,21 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   block?: boolean;
 }
 
+/**
+ * Stamped-block buttons: hard offset shadow that the button physically
+ * presses into, like a rubber stamp meeting paper.
+ */
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-civilian text-noir font-semibold active:brightness-95',
-  danger: 'bg-undercover text-white font-semibold active:brightness-95',
-  ghost: 'bg-transparent text-white/70 active:bg-white/5',
-  glass: 'glass text-white active:brightness-110',
+  primary:
+    'bg-ink text-paper shadow-[0.25rem_0.25rem_0_rgba(43,36,22,0.30)] active:translate-x-[0.2rem] active:translate-y-[0.2rem] active:shadow-none',
+  danger:
+    'bg-undercover text-paper shadow-[0.25rem_0.25rem_0_rgba(43,36,22,0.35)] active:translate-x-[0.2rem] active:translate-y-[0.2rem] active:shadow-none',
+  ghost:
+    'bg-transparent border-2 border-dashed border-ink/35 text-ink/65 active:bg-ink/5 active:text-ink',
+  glass:
+    'bg-paper text-ink border-2 border-ink shadow-[0.25rem_0.25rem_0_rgba(43,36,22,0.22)] active:translate-x-[0.2rem] active:translate-y-[0.2rem] active:shadow-none',
 };
 
-/** Big, thumb-friendly touch target. Min height 56px (mobile-first). */
 export function Button({
   children,
   variant = 'primary',
@@ -27,7 +34,7 @@ export function Button({
   return (
     <button
       {...rest}
-      className={`flex min-h-14 items-center justify-center gap-2 rounded-2xl px-6 text-base tracking-wide transition disabled:opacity-40 disabled:shadow-none ${
+      className={`flex min-h-14 items-center justify-center gap-2 rounded-[0.3rem] px-6 font-display text-lg uppercase tracking-[0.06em] transition-[transform,box-shadow,opacity,background-color] duration-100 disabled:pointer-events-none disabled:opacity-30 disabled:shadow-none ${
         block ? 'w-full' : ''
       } ${VARIANTS[variant]} ${className}`}
     >

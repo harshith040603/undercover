@@ -20,17 +20,18 @@ export function WhiteGuess() {
   return (
     <Screen spotlight className="items-center justify-between py-10 text-center">
       <motion.div
-        animate={{ opacity: [0.4, 1, 0.4] }}
+        animate={{ opacity: [0.45, 1, 0.45] }}
         transition={{ repeat: Infinity, duration: 2 }}
-        className="pt-6 font-display text-xs uppercase tracking-[0.4em] text-white"
+        className="pt-6 text-xs font-bold uppercase tracking-[0.4em] text-ink"
       >
-        ⬜ {white?.name} · one shot
+        {white?.name} · one shot
       </motion.div>
 
-      <div className="flex w-full flex-1 flex-col items-center justify-center gap-6">
-        <h2 className="font-display text-3xl font-bold leading-tight">
+      <div className="flex w-full flex-1 flex-col items-center justify-center gap-7">
+        <h2 className="font-display text-4xl leading-tight text-ink">
           What was the<br />civilian word?
         </h2>
+        {/* The blank line on the form — Mr. White fills it in */}
         <input
           autoFocus
           value={guess}
@@ -40,15 +41,15 @@ export function WhiteGuess() {
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
-          className="w-full max-w-xs border-b-2 border-white/30 bg-transparent pb-2 text-center font-display text-3xl text-white placeholder:text-white/20 focus:border-white focus:outline-none"
+          className="w-full max-w-xs border-b-2 border-dashed border-ink/40 bg-transparent pb-2 text-center font-display text-3xl text-ink placeholder:font-body placeholder:text-base placeholder:text-ink/35 focus:border-solid focus:border-undercover focus:outline-none"
         />
-        <p className="text-xs text-white/35">
+        <p className="text-xs text-ink/50">
           Nail it and Mr. White steals the win.
         </p>
       </div>
 
       <Button onClick={submit} disabled={!guess.trim()}>
-        Lock in Guess
+        Lock in guess
       </Button>
     </Screen>
   );

@@ -5,6 +5,8 @@ import { Button } from '@/ui/Button';
 import { useGame } from '@/store/gameStore';
 
 const LETTERS = 'UNDERCOVER'.split('');
+// The signature: one letter of the title arrives pre-redacted.
+const REDACTED_INDEX = 6; // the "O"
 
 export function Home() {
   const nav = useNavigate();
@@ -17,30 +19,50 @@ export function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9 }}
-          className="mb-4 font-display text-[11px] uppercase tracking-[0.4em] text-amber/70"
+          className="mb-8 text-[11px] font-bold uppercase tracking-[0.35em] text-ink/55"
         >
-          The word imposter game
+          Case file · the word imposter game
         </motion.p>
 
-        <h1 className="flex flex-wrap justify-center font-display text-5xl font-extrabold uppercase leading-none tracking-tight">
-          {LETTERS.map((ch, i) => (
-            <motion.span
-              key={i}
-              initial={{ opacity: 0, y: -24, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              transition={{ delay: i * 0.06, type: 'spring', stiffness: 500, damping: 22 }}
-              className={i % 2 === 0 ? 'text-white' : 'text-civilian'}
-            >
-              {ch}
-            </motion.span>
-          ))}
-        </h1>
+        <div className="relative">
+          <h1 className="flex flex-wrap justify-center font-display text-[3.4rem] uppercase leading-none text-ink">
+            {LETTERS.map((ch, i) => (
+              <motion.span
+                key={i}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.055, duration: 0.12 }}
+                className="relative"
+              >
+                {ch}
+                {i === REDACTED_INDEX && (
+                  <motion.span
+                    aria-hidden
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: 0.75, duration: 0.18, ease: 'easeOut' }}
+                    className="redact absolute -inset-x-[2px] top-[7%] bottom-[18%] origin-left"
+                  />
+                )}
+              </motion.span>
+            ))}
+          </h1>
+
+          <motion.span
+            initial={{ opacity: 0, scale: 1.7, rotate: -4 }}
+            animate={{ opacity: 1, scale: 1, rotate: -8 }}
+            transition={{ delay: 1.15, duration: 0.16, ease: 'easeIn' }}
+            className="stamp stamp-worn absolute -top-4 -right-3 text-xl text-undercover"
+          >
+            Top secret
+          </motion.span>
+        </div>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.1 }}
-          className="mt-5 max-w-[16rem] text-sm leading-relaxed text-white/45"
+          transition={{ delay: 1.4 }}
+          className="mt-6 max-w-[17rem] text-sm leading-relaxed text-ink/60"
         >
           One word stands between you and exposure. Pass the phone. Trust no one.
         </motion.p>
@@ -49,18 +71,18 @@ export function Home() {
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.0 }}
+        transition={{ delay: 1.2 }}
         className="flex w-full flex-col gap-3"
       >
         {activeGame && (
           <Button variant="glass" onClick={() => nav('/play')}>
-            ▶ Resume game
+            Reopen case — resume game
           </Button>
         )}
-        <Button onClick={() => nav('/players')}>New Game</Button>
+        <Button onClick={() => nav('/players')}>New game</Button>
         <div className="flex gap-3">
           <Button variant="ghost" onClick={() => nav('/how')}>
-            How to Play
+            How to play
           </Button>
           <Button variant="ghost" onClick={() => nav('/settings')}>
             Settings

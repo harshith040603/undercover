@@ -41,20 +41,30 @@ export function Debate() {
       <TopBar title={`Round ${game.round} · Debate`} />
 
       <div className="flex flex-1 flex-col items-center justify-center">
-        <p className="mb-8 max-w-[15rem] text-sm text-white/45">
+        <p className="mb-8 max-w-[15rem] text-sm text-ink/60">
           Accuse. Defend. Second-guess. Who's bluffing?
         </p>
 
+        {/* Interrogation stopwatch: dotted paper track, ink hand */}
         <div className="relative h-56 w-56">
           <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              stroke="rgba(43,36,22,0.18)"
+              strokeWidth="3"
+              strokeDasharray="0.5 5.5"
+              strokeLinecap="round"
+            />
             <motion.circle
               cx="50"
               cy="50"
               r="45"
               fill="none"
-              stroke={remaining === 0 ? 'var(--color-undercover)' : 'var(--color-amber)'}
-              strokeWidth="6"
+              stroke={remaining === 0 ? 'var(--color-undercover)' : 'var(--color-ink)'}
+              strokeWidth="5"
               strokeLinecap="round"
               strokeDasharray={2 * Math.PI * 45}
               animate={{ strokeDashoffset: 2 * Math.PI * 45 * (1 - pct) }}
@@ -62,12 +72,16 @@ export function Debate() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-display text-5xl font-bold tabular-nums">
+            <span
+              className={`font-display text-6xl tabular-nums ${
+                remaining === 0 ? 'text-undercover' : 'text-ink'
+              }`}
+            >
               {mins}:{secs.toString().padStart(2, '0')}
             </span>
             <button
               onClick={() => setRunning((r) => !r)}
-              className="mt-2 text-xs uppercase tracking-widest text-white/40 active:text-white"
+              className="mt-2 text-xs font-bold uppercase tracking-widest text-ink/50 active:text-ink"
             >
               {running ? 'Pause' : remaining === 0 ? "Time's up" : 'Resume'}
             </button>
@@ -76,7 +90,7 @@ export function Debate() {
       </div>
 
       <Button variant="danger" onClick={() => dispatch({ type: 'OPEN_VOTE' })}>
-        Call the Vote
+        Call the vote
       </Button>
     </Screen>
   );

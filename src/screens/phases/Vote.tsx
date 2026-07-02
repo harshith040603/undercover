@@ -51,10 +51,10 @@ export function Vote() {
       <TopBar title={isRevote ? 'Revote!' : `Round ${game.round} · Vote`} />
 
       <div className="mt-1 text-center">
-        <p className="text-sm text-white/55">
+        <p className="text-sm text-ink/65">
           “Hands up for who you suspect.” Count the hands, tap to enter each total.
         </p>
-        <p className="mt-1 text-xs text-white/35">
+        <p className="mt-1 text-xs font-bold text-ink/45">
           {totalCast} of {livingCount} {livingCount === 1 ? 'vote' : 'votes'} counted
         </p>
       </div>
@@ -78,10 +78,34 @@ export function Vote() {
           Clear
         </Button>
         <Button variant="danger" onClick={eliminate} disabled={totalCast === 0}>
-          Eliminate Top Vote
+          Eliminate top vote
         </Button>
       </div>
     </Screen>
+  );
+}
+
+/** Pen-and-paper tally marks: groups of four strokes with a diagonal strike. */
+function Tally({ n }: { n: number }) {
+  const groups: number[] = [];
+  for (let i = 0; i < Math.floor(n / 5); i++) groups.push(5);
+  if (n % 5) groups.push(n % 5);
+
+  if (n === 0) return <span className="text-sm text-ink/25">—</span>;
+
+  return (
+    <span className="flex items-center gap-2" aria-hidden>
+      {groups.map((g, gi) => (
+        <span key={gi} className="relative flex items-center gap-[3px]">
+          {Array.from({ length: g === 5 ? 4 : g }).map((_, si) => (
+            <span key={si} className="h-5 w-[2px] rounded-full bg-current" />
+          ))}
+          {g === 5 && (
+            <span className="absolute left-1/2 top-1/2 h-[2px] w-[26px] -translate-x-1/2 -translate-y-1/2 -rotate-[55deg] rounded-full bg-current" />
+          )}
+        </span>
+      ))}
+    </span>
   );
 }
 
@@ -102,44 +126,46 @@ function CountRow({
 }) {
   return (
     <div
-      className={`flex items-center gap-3 rounded-xl border px-3 py-3 transition ${
-        leading ? 'border-undercover bg-undercover/10' : 'border-glass-edge bg-glass'
+      className={`flex items-center gap-2 rounded-card border px-3 py-3 transition ${
+        leading ? 'border-2 border-undercover bg-undercover/10' : 'sheet'
       }`}
     >
       {/* Tap the name area to add a vote — the fast path. */}
       <button
         onClick={onAdd}
         disabled={!canAdd}
-        className="flex-1 py-1 text-left text-base active:opacity-70 disabled:active:opacity-100"
+        className="min-w-0 flex-1 py-1 text-left text-base font-bold active:opacity-70 disabled:active:opacity-100"
       >
-        {player.name}
+        <span className="block truncate">{player.name}</span>
       </button>
+
+      {/* The host's tally, scratched next to the name */}
+      <motion.span
+        key={count}
+        initial={{ scale: 1.25 }}
+        animate={{ scale: 1 }}
+        className={`flex min-w-[3.5rem] items-center justify-end gap-2 ${
+          leading ? 'text-undercover' : 'text-ink/75'
+        }`}
+      >
+        <Tally n={count} />
+        <span className="w-5 text-right font-display text-xl tabular-nums">{count}</span>
+      </motion.span>
 
       <button
         onClick={onSub}
         disabled={count === 0}
         aria-label={`One fewer vote for ${player.name}`}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-xl active:bg-white/20 disabled:opacity-25"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.3rem] border-2 border-ink/30 text-xl text-ink active:bg-ink active:text-paper disabled:opacity-25"
       >
         −
       </button>
-
-      <motion.span
-        key={count}
-        initial={{ scale: 1.3 }}
-        animate={{ scale: 1 }}
-        className={`w-7 text-center font-display text-2xl tabular-nums ${
-          leading ? 'text-undercover' : 'text-white/80'
-        }`}
-      >
-        {count}
-      </motion.span>
 
       <button
         onClick={onAdd}
         disabled={!canAdd}
         aria-label={`One more vote for ${player.name}`}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-xl active:bg-white/20 disabled:opacity-25"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.3rem] border-2 border-ink/30 text-xl text-ink active:bg-ink active:text-paper disabled:opacity-25"
       >
         +
       </button>

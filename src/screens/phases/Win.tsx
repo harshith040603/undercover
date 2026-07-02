@@ -9,22 +9,22 @@ import type { Winner } from '@/engine/types';
 
 const WIN_META: Record<Winner, { title: string; sub: string; color: string; bg: string }> = {
   civilians: {
-    title: 'CASE CLOSED',
+    title: 'Case closed',
     sub: 'The Civilians rooted out every imposter.',
     color: 'var(--color-civilian)',
-    bg: 'radial-gradient(ellipse at center, rgba(255,210,90,0.20), transparent 70%)',
+    bg: 'radial-gradient(ellipse at center, rgba(43,78,162,0.14), transparent 70%)',
   },
   imposters: {
-    title: 'THEY GOT AWAY',
+    title: 'They got away',
     sub: 'The imposters reached parity. Nobody saw it coming.',
     color: 'var(--color-undercover)',
-    bg: 'radial-gradient(ellipse at center, rgba(255,120,90,0.22), transparent 70%)',
+    bg: 'radial-gradient(ellipse at center, rgba(179,49,31,0.14), transparent 70%)',
   },
   white: {
-    title: 'THE BLANK WINS',
+    title: 'The blank wins',
     sub: 'Mr. White had no word — and still cracked it.',
-    color: 'var(--color-white)',
-    bg: 'radial-gradient(ellipse at center, rgba(245,245,244,0.22), transparent 70%)',
+    color: 'var(--color-ink)',
+    bg: 'radial-gradient(ellipse at center, rgba(249,243,225,0.55), transparent 70%)',
   },
 };
 
@@ -46,13 +46,14 @@ export function Win() {
     <Screen className="items-center justify-between py-10 text-center">
       <div className="pointer-events-none absolute inset-0" style={{ background: meta.bg }} />
 
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-4">
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-5">
+        {/* The final verdict, stamped across the file */}
         <motion.h1
-          initial={{ scale: 0.6, opacity: 0, filter: 'blur(10px)' }}
-          animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
-          transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-          className="font-display text-5xl font-extrabold uppercase tracking-tight"
-          style={{ color: meta.color, textShadow: `0 0 40px ${meta.color}` }}
+          initial={{ scale: 2, opacity: 0, rotate: 2 }}
+          animate={{ scale: 1, opacity: 1, rotate: -6 }}
+          transition={{ duration: 0.18, ease: 'easeIn' }}
+          className="stamp stamp-worn text-5xl"
+          style={{ color: meta.color }}
         >
           {meta.title}
         </motion.h1>
@@ -60,26 +61,32 @@ export function Win() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="max-w-[16rem] text-sm text-white/55"
+          className="max-w-[16rem] text-sm text-ink/65"
         >
           {meta.sub}
         </motion.p>
 
+        {/* Declassified case summary — everything un-redacted at last */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-4 w-full space-y-1 rounded-card border border-glass-edge bg-glass p-4 text-left text-sm"
+          className="sheet mt-4 w-full space-y-1.5 rounded-card p-4 text-left text-sm shadow-[0.3rem_0.3rem_0_rgba(43,36,22,0.15)]"
         >
-          <p className="text-white/40">
-            Civilian word: <span className="text-civilian">{game.civilianWord}</span>
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-ink/40">
+            Declassified
           </p>
-          <p className="text-white/40">
-            Undercover word: <span className="text-undercover">{game.undercoverWord}</span>
+          <p className="text-ink/60">
+            Civilian word: <span className="font-bold text-civilian">{game.civilianWord}</span>
           </p>
-          <p className="pt-1 text-white/40">
+          <p className="text-ink/60">
+            Undercover word: <span className="font-bold text-undercover">{game.undercoverWord}</span>
+          </p>
+          <p className="pt-1 text-ink/60">
             Imposters were:{' '}
-            <span className="text-white">{imposters.map((p) => p.name).join(', ') || '—'}</span>
+            <span className="font-bold text-ink">
+              {imposters.map((p) => p.name).join(', ') || '—'}
+            </span>
           </p>
         </motion.div>
       </div>
@@ -91,7 +98,7 @@ export function Win() {
             nav('/play');
           }}
         >
-          Play Again · Same Crew
+          Play again · same crew
         </Button>
         <Button
           variant="ghost"

@@ -21,18 +21,20 @@ function Toggle({
         haptic('tick');
         onChange(!on);
       }}
-      className="flex w-full items-center justify-between gap-4 rounded-xl border border-glass-edge bg-glass px-4 py-3 text-left"
+      className="sheet flex w-full items-center justify-between gap-4 rounded-card px-4 py-3 text-left"
     >
       <span>
-        <span className="block text-sm text-white/90">{label}</span>
-        {hint && <span className="block text-xs text-white/40">{hint}</span>}
+        <span className="block text-sm font-bold text-ink">{label}</span>
+        {hint && <span className="block text-xs text-ink/50">{hint}</span>}
       </span>
+      {/* Checkbox drawn like a form field: empty box → inked X */}
       <span
-        className={`relative h-7 w-12 shrink-0 rounded-full transition ${on ? 'bg-civilian' : 'bg-white/15'}`}
+        aria-hidden
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.25rem] border-2 font-display text-xl leading-none transition ${
+          on ? 'border-civilian bg-civilian text-paper' : 'border-ink/35 text-transparent'
+        }`}
       >
-        <span
-          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition-all ${on ? 'left-[22px]' : 'left-0.5'}`}
-        />
+        ✕
       </span>
     </button>
   );
@@ -50,8 +52,8 @@ function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="rounded-xl border border-glass-edge bg-glass p-3">
-      <p className="mb-2 text-sm text-white/90">{label}</p>
+    <div className="sheet rounded-card p-3">
+      <p className="mb-2 text-sm font-bold text-ink">{label}</p>
       <div className="flex gap-1">
         {options.map((o) => (
           <button
@@ -60,8 +62,10 @@ function Segmented<T extends string>({
               haptic('tick');
               onChange(o.id);
             }}
-            className={`flex-1 rounded-lg px-2 py-2 text-xs transition ${
-              value === o.id ? 'bg-civilian text-noir font-semibold' : 'bg-white/5 text-white/60'
+            className={`flex-1 rounded-[0.3rem] border-2 px-2 py-2 text-xs transition ${
+              value === o.id
+                ? 'border-ink bg-ink font-bold text-paper'
+                : 'border-ink/20 bg-transparent text-ink/60'
             }`}
           >
             {o.label}
@@ -118,8 +122,10 @@ export function Settings() {
           ]}
         />
 
-        <div className="rounded-xl border border-glass-edge bg-glass p-3">
-          <p className="mb-2 text-sm text-white/90">Debate timer: {rules.debateSeconds}s</p>
+        <div className="sheet rounded-card p-3">
+          <p className="mb-2 text-sm font-bold text-ink">
+            Debate timer: <span className="tabular-nums">{rules.debateSeconds}s</span>
+          </p>
           <input
             type="range"
             min={30}
@@ -127,7 +133,7 @@ export function Settings() {
             step={15}
             value={rules.debateSeconds}
             onChange={(e) => set('debateSeconds', Number(e.target.value))}
-            className="w-full accent-civilian"
+            className="w-full accent-undercover"
           />
         </div>
       </div>

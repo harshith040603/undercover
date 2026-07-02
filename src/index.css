@@ -1,70 +1,53 @@
 @import 'tailwindcss';
 
-/* ───────────────────────────────────────────────────────────
-   Undercover — Neon-Noir Interrogation theme tokens
-   ─────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   THE CASE FILE — classified paper dossier design system
+   Manila folder base · typewriter ink · rubber-stamp red & blue
+   Signature: redaction bars over anything secret.
+   ───────────────────────────────────────────────────────────── */
 @theme {
-  /* ── Palette: warm sunset on carbon ──
-     Banana Cream #fff05a · Golden Pollen #ffd25a · Sandy Brown #ffaa5a ·
-     Vibrant Coral #ff785a · Carbon Black #191919.
-     Maps naturally to roles: gold = civilian, coral = imposter. */
+  /* Role stamps */
+  --color-civilian: #2B4EA2;    /* stamp blue — cleared            */
+  --color-undercover: #B3311F;  /* stamp red  — suspect / danger   */
+  --color-blank: #F9F3E1;       /* Mr. White — the blank slip      */
 
-  /* Semantic role colors */
-  --color-civilian: #ffd25a; /* Golden Pollen — primary / civilian */
-  --color-undercover: #ff785a; /* Vibrant Coral — danger / imposter */
-  --color-white: #f5f5f4; /* off-white (Mr. White, the blank) */
+  /* Paper stack */
+  --color-manila:   #E7D69F;    /* folder background               */
+  --color-manila-2: #DDC788;    /* pressed / active folder surface */
+  --color-paper:    #F7F0DC;    /* loose sheets & index cards      */
+  --color-ink:      #2B2416;    /* typewriter ribbon ink           */
 
-  /* Surfaces — carbon base + clean neutral steps */
-  --color-noir: #191919; /* Carbon Black — app background */
-  --color-noir-2: #202020; /* raised surface */
-  --color-noir-3: #272727; /* card surface */
-  --color-noir-4: #313131; /* active / elevated surface */
-  --color-cream: #fff05a; /* Banana Cream — bright pop / wins */
-  --color-amber: #ffaa5a; /* Sandy Brown — spotlight / active accent */
+  /* Typography */
+  --font-display: 'Staatliches', 'Arial Narrow', sans-serif;
+  --font-body:    'Courier Prime', 'Courier New', monospace;
 
-  /* Glass */
-  --color-glass: oklch(1 0 0 / 6%);
-  --color-glass-edge: oklch(1 0 0 / 12%);
-
-  /* Display + body type */
-  --font-display: 'Bitcount Single', 'Archivo', 'Arial Narrow', system-ui, sans-serif;
-  --font-body: 'Cormorant Garamond', ui-serif, Georgia, system-ui, serif;
-
-  /* Mobile-tuned radii */
-  --radius-card: 1.25rem;
+  /* Radii — index cards have barely-rounded corners */
+  --radius-card: 0.5rem;
 }
 
-/* ───────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────
    Base: mobile-first, full-height app shell
-   ─────────────────────────────────────────────────────────── */
+   ───────────────────────────────────────────────────────────── */
 @layer base {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     box-sizing: border-box;
   }
 
-  html,
-  body,
-  #root {
+  html, body, #root {
     height: 100%;
   }
 
   html {
-    /* prevent iOS rubber-band & text inflation */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
 
   body {
     margin: 0;
-    background-color: var(--color-noir);
-    color: var(--color-white);
+    background-color: var(--color-manila);
+    color: var(--color-ink);
     font-family: var(--font-body);
-    /* Cormorant runs light at 400 — nudge up for small mobile UI */
-    font-weight: 500;
-    font-optical-sizing: auto;
-    /* Disable text selection / callout during pass-and-play */
+    font-weight: 400;
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
@@ -77,11 +60,10 @@
     flex-direction: column;
   }
 
-  /* Re-enable selection only on real inputs */
-  input,
-  textarea {
+  input, textarea {
     -webkit-user-select: text;
     user-select: text;
+    caret-color: var(--color-undercover);
   }
 
   button {
@@ -90,13 +72,22 @@
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
+
+  :focus-visible {
+    outline: 2px dashed var(--color-ink);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
 }
 
-/* ───────────────────────────────────────────────────────────
-   Utilities used across screens
-   ─────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   Utilities
+   ───────────────────────────────────────────────────────────── */
 @layer utilities {
-  /* Safe-area aware padding (notches / home indicator) */
   .pt-safe {
     padding-top: max(env(safe-area-inset-top), 0.75rem);
   }
@@ -108,43 +99,78 @@
     padding-right: max(env(safe-area-inset-right), 1rem);
   }
 
-  /* Film grain overlay — whisper-light for a clean finish */
+  /* Paper fibre — dark speckle multiplied over the folder */
   .grain::after {
     content: '';
     position: fixed;
     inset: 0;
     pointer-events: none;
-    opacity: 0.015;
+    opacity: 0.05;
     z-index: 50;
+    mix-blend-mode: multiply;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  /* Warm spotlight glow behind a focal element */
+  /* Desk-lamp pool of light behind focal content */
   .spotlight {
     background: radial-gradient(
-      ellipse 80% 60% at 50% 35%,
-      color-mix(in oklab, var(--color-amber), transparent 86%),
-      transparent 70%
+      ellipse 75% 50% at 50% 26%,
+      rgba(255, 252, 238, 0.55),
+      transparent 65%
     );
   }
 
-  .glass {
-    background: var(--color-glass);
-    border: 1px solid var(--color-glass-edge);
-    backdrop-filter: blur(12px);
+  /* A loose sheet of paper resting on the folder */
+  .sheet {
+    background: var(--color-paper);
+    border: 1px solid rgba(43, 36, 22, 0.22);
   }
 
-  /* Bitcount Single variation axes for all display type */
+  /* Rubber stamp: bordered, condensed caps; rotate per-use.
+     The noise mask wears the ink away like a real stamp pad. */
+  .stamp {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    border: 3px solid currentColor;
+    border-radius: 6px;
+    padding: 0.3em 0.55em 0.22em;
+    display: inline-block;
+  }
+  .stamp-worn {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
+    -webkit-mask-size: 240px;
+    mask-size: 240px;
+  }
+
+  /* Redaction bar — the app's signature. Covers its own text. */
+  .redact {
+    background: var(--color-ink);
+    color: transparent;
+    border-radius: 2px;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* File-folder tab for section headers */
+  .tab {
+    display: inline-block;
+    background: var(--color-manila-2);
+    border: 1px solid rgba(43, 36, 22, 0.25);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 0.3rem 0.75rem 0.25rem;
+  }
+
   .font-display {
-    font-optical-sizing: auto;
-    font-variation-settings: 'slnt' 0, 'CRSV' 0.5, 'ELSH' 0, 'ELXP' 0;
+    letter-spacing: 0.02em;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

@@ -47,19 +47,19 @@ export function Players() {
 
   return (
     <Screen className="pb-6">
-      <TopBar title="Players" onBack={() => nav('/')} />
+      <TopBar title="Personnel" onBack={() => nav('/')} />
 
       <div className="mt-2 flex items-baseline justify-between">
-        <h2 className="font-display text-3xl font-bold">Who's playing?</h2>
-        <span className="text-sm tabular-nums text-white/40">
+        <h2 className="font-display text-4xl text-ink">Who's playing?</h2>
+        <span className="text-sm font-bold tabular-nums text-ink/50">
           {names.length}/{MAX_PLAYERS}
         </span>
       </div>
-      <p className="mt-1 text-sm text-white/45">
+      <p className="mt-1 text-sm text-ink/60">
         Add {MIN_PLAYERS}–{MAX_PLAYERS} players. Blank names auto-fill.
       </p>
 
-      <div className="mt-5 flex-1 space-y-2 overflow-y-auto">
+      <div className="mt-5 flex-1 space-y-1 overflow-y-auto">
         <AnimatePresence initial={false}>
           {names.map((name, i) => (
             <motion.div
@@ -70,8 +70,8 @@ export function Players() {
               exit={{ opacity: 0, x: 12 }}
               className="flex items-center gap-2"
             >
-              <span className="w-6 shrink-0 text-center text-sm tabular-nums text-white/30">
-                {i + 1}
+              <span className="w-8 shrink-0 text-center text-sm font-bold tabular-nums text-undercover/70">
+                {String(i + 1).padStart(2, '0')}
               </span>
               <input
                 value={name}
@@ -79,13 +79,13 @@ export function Players() {
                 placeholder={`Player ${i + 1}`}
                 maxLength={16}
                 autoComplete="off"
-                className="h-12 flex-1 rounded-xl border border-glass-edge bg-glass px-4 text-base text-white placeholder:text-white/25 focus:border-civilian focus:outline-none"
+                className="h-12 flex-1 border-b-2 border-dashed border-ink/30 bg-transparent px-1 text-base font-bold text-ink placeholder:font-normal placeholder:text-ink/30 focus:border-solid focus:border-civilian focus:outline-none"
               />
               <button
                 onClick={() => removeAt(i)}
                 disabled={names.length <= MIN_PLAYERS}
                 aria-label="Remove player"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-white/40 active:bg-white/10 disabled:opacity-20"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-ink/40 active:bg-ink/10 active:text-undercover disabled:opacity-20"
               >
                 ✕
               </button>
@@ -96,14 +96,14 @@ export function Players() {
 
       <div className="mt-4 flex gap-3">
         <Button variant="glass" onClick={add} disabled={names.length >= MAX_PLAYERS}>
-          + Add
+          + Add player
         </Button>
         <Button variant="ghost" onClick={surprise}>
-          🎲 Surprise me
+          Codenames
         </Button>
       </div>
       <div className="mt-3">
-        <Button onClick={next}>Next: Roles & Pack</Button>
+        <Button onClick={next}>Next: roles & pack</Button>
       </div>
     </Screen>
   );
