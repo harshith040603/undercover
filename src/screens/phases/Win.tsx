@@ -26,6 +26,12 @@ const WIN_META: Record<Winner, { title: string; sub: string; color: string; bg: 
     color: 'var(--color-ink)',
     bg: 'radial-gradient(ellipse at center, rgba(249,243,225,0.55), transparent 70%)',
   },
+  killer: {
+    title: 'No witnesses',
+    sub: 'The Serial Killer outlasted them all, one night at a time.',
+    color: 'var(--color-ink)',
+    bg: 'radial-gradient(ellipse at center, rgba(43,36,22,0.16), transparent 70%)',
+  },
 };
 
 export function Win() {
@@ -40,7 +46,9 @@ export function Win() {
     haptic('buzz');
   }, []);
 
-  const imposters = game.players.filter((p) => p.role !== 'civilian');
+  const imposters = game.players.filter((p) => p.role !== 'civilian' && p.role !== 'killer');
+  const killer = game.players.find((p) => p.role === 'killer');
+  const lovers = game.players.filter((p) => p.loverId);
 
   return (
     <Screen className="items-center justify-between py-10 text-center">
@@ -88,6 +96,19 @@ export function Win() {
               {imposters.map((p) => p.name).join(', ') || '—'}
             </span>
           </p>
+          {killer && (
+            <p className="text-ink/60">
+              The Serial Killer: <span className="font-bold text-ink">{killer.name}</span>
+            </p>
+          )}
+          {lovers.length === 2 && (
+            <p className="text-ink/60">
+              The Lovers:{' '}
+              <span className="font-bold text-ink">
+                {lovers.map((p) => p.name).join(' & ')}
+              </span>
+            </p>
+          )}
         </motion.div>
       </div>
 

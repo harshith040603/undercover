@@ -5,11 +5,28 @@ import { defaultDistribution, validateCounts } from './distribution';
 import { seeded } from './rng';
 import type { GameConfig, GameState } from './types';
 
-function makeConfig(undercover: number, white: number, over: Partial<GameConfig['rules']> = {}): GameConfig {
+interface Specials {
+  revenger?: number;
+  killer?: number;
+  lovers?: boolean;
+}
+
+function makeConfig(
+  undercover: number,
+  white: number,
+  over: Partial<GameConfig['rules']> = {},
+  specials: Specials = {},
+): GameConfig {
   return {
     packId: 'test',
     difficulty: 'normal',
-    counts: { undercover, white },
+    counts: {
+      undercover,
+      white,
+      revenger: specials.revenger ?? 0,
+      killer: specials.killer ?? 0,
+    },
+    lovers: specials.lovers ?? false,
     rules: {
       blindCounts: true,
       oneWordMode: false,
@@ -24,13 +41,29 @@ function makeConfig(undercover: number, white: number, over: Partial<GameConfig[
   };
 }
 
-function newGame(names: string[], undercover: number, white: number, seed = 1, rules = {}): GameState {
+function newGame(
+  names: string[],
+  undercover: number,
+  white: number,
+  seed = 1,
+  rules = {},
+  specials: Specials = {},
+): GameState {
   return createGame({
     names,
-    config: makeConfig(undercover, white, rules),
+    config: makeConfig(undercover, white, rules, specials),
     pair: { civilian: 'Apple', undercover: 'Pear' },
     rng: seeded(seed),
   });
+}
+
+/** Vote out one specific player: everyone else piles onto them. */
+function voteOut(s: GameState, targetId: string): GameState {
+  s = reducer(s, { type: 'OPEN_VOTE' });
+  for (const v of livingPlayers(s)) {
+    if (v.id !== targetId) s = reducer(s, { type: 'CAST_VOTE', voterId: v.id, targetId });
+  }
+  return reducer(s, { type: 'RESOLVE_VOTE', rng: seeded(1) });
 }
 
 describe('role assignment', () => {
@@ -315,6 +348,219 @@ describe('distribution table', () => {
     expect(validateCounts(4, 1, 0).ok).toBe(true);
     expect(validateCounts(5, 1, 1).ok).toBe(true);
     expect(validateCounts(3, 0, 0).ok).toBe(false); // no imposter
+  });
+});
+
+describe('special role: Revenger', () => {
+  // 7 players, 1 undercover + 1 revenger + 1 white = 3 imposters vs 4 civilians.
+  function withRevenger(seed = 11): GameState {
+    let s = newGame(['A', 'B', 'C', 'D', 'E', 'F', 'G'], 1, 1, seed, {}, { revenger: 1 });
+    s = reducer(s, { type: 'REVEAL_DONE' });
+    return s;
+  }
+
+  it('assigns exactly one revenger with the undercover word', () => {
+    const s = withRevenger();
+    const revs = s.players.filter((p) => p.role === 'revenger');
+    expect(revs).toHaveLength(1);
+    expect(revs[0].word).toBe('Pear');
+  });
+
+  it('counts as an imposter for the win check', () => {
+    let s = withRevenger();
+    // Kill the undercover and the white: revenger alone keeps the game alive.
+    s = {
+      ...s,
+      players: s.players.map((p) =>
+        p.role === 'undercover' || p.role === 'white' ? { ...p, alive: false } : p,
+      ),
+    };
+    expect(checkWinner(s)).toBeNull();
+  });
+
+  it('voted out → owes revenge; picks a target who falls with them', () => {
+    let s = withRevenger();
+    const rev = s.players.find((p) => p.role === 'revenger')!;
+    s = voteOut(s, rev.id);
+    expect(s.phase).toBe('elimination');
+    expect(s.awaitingRevengeBy).toBe(rev.id);
+    expect(s.winner).toBeNull(); // deferred until revenge resolves
+
+    s = reducer(s, { type: 'NEXT_ROUND' });
+    expect(s.phase).toBe('revenge');
+
+    const victim = livingPlayers(s).find((p) => p.role === 'civilian')!;
+    s = reducer(s, { type: 'REVENGE', targetId: victim.id });
+    expect(s.players.find((p) => p.id === victim.id)!.alive).toBe(false);
+    expect(s.phase).toBe('elimination');
+    expect(s.awaitingRevengeBy).toBeNull();
+    expect(s.history.at(-1)).toMatchObject({ playerId: victim.id, cause: 'revenge' });
+  });
+
+  it('a Mr. White dragged down by revenge gets no guess', () => {
+    let s = withRevenger();
+    const rev = s.players.find((p) => p.role === 'revenger')!;
+    const white = s.players.find((p) => p.role === 'white')!;
+    s = voteOut(s, rev.id);
+    s = reducer(s, { type: 'NEXT_ROUND' });
+    s = reducer(s, { type: 'REVENGE', targetId: white.id });
+    expect(s.players.find((p) => p.id === white.id)!.alive).toBe(false);
+    expect(s.awaitingWhiteGuess).toBe(false);
+    s = reducer(s, { type: 'NEXT_ROUND' });
+    expect(s.phase).not.toBe('whiteGuess');
+  });
+
+  it('dying by revenge does not trigger a dead revenger twice', () => {
+    let s = withRevenger();
+    const civ = livingPlayers(s).find((p) => p.role === 'civilian')!;
+    s = voteOut(s, civ.id); // normal elimination, no revenge owed
+    expect(s.awaitingRevengeBy).toBeNull();
+  });
+
+  it('validateCounts caps the revenger at 1', () => {
+    expect(validateCounts(8, 1, 0, 1).ok).toBe(true);
+    expect(validateCounts(8, 1, 0, 2).ok).toBe(false);
+  });
+});
+
+describe('special variant: Lovers', () => {
+  it('binds exactly two players to each other', () => {
+    const s = newGame(['A', 'B', 'C', 'D', 'E'], 1, 1, 3, {}, { lovers: true });
+    const lovers = s.players.filter((p) => p.loverId);
+    expect(lovers).toHaveLength(2);
+    expect(lovers[0].loverId).toBe(lovers[1].id);
+    expect(lovers[1].loverId).toBe(lovers[0].id);
+  });
+
+  it('no lovers when the variant is off', () => {
+    const s = newGame(['A', 'B', 'C', 'D', 'E'], 1, 1, 3);
+    expect(s.players.every((p) => !p.loverId)).toBe(true);
+  });
+
+  it('eliminating one lover kills both (heartbreak)', () => {
+    let s = newGame(['A', 'B', 'C', 'D', 'E', 'F', 'G'], 1, 0, 9, {}, { lovers: true });
+    s = reducer(s, { type: 'REVEAL_DONE' });
+    const [a, b] = s.players.filter((p) => p.loverId);
+    s = voteOut(s, a.id);
+    expect(s.players.find((p) => p.id === a.id)!.alive).toBe(false);
+    expect(s.players.find((p) => p.id === b.id)!.alive).toBe(false);
+    expect(s.lastEliminatedIds).toEqual([a.id, b.id]);
+    expect(s.history.at(-1)).toMatchObject({ playerId: b.id, cause: 'heartbreak' });
+  });
+
+  it('a Mr. White who dies of heartbreak gets no guess', () => {
+    // Find a seed where Mr. White is one of the lovers.
+    let s: GameState | null = null;
+    let white: ReturnType<typeof livingPlayers>[number] | undefined;
+    for (let seed = 1; seed < 200; seed++) {
+      const g = newGame(['A', 'B', 'C', 'D', 'E', 'F', 'G'], 1, 1, seed, {}, { lovers: true });
+      const w = g.players.find((p) => p.role === 'white');
+      if (w?.loverId) {
+        s = g;
+        white = w;
+        break;
+      }
+    }
+    expect(s).not.toBeNull();
+    let g = reducer(s!, { type: 'REVEAL_DONE' });
+    g = voteOut(g, white!.loverId!); // vote out the White's partner
+    expect(g.players.find((p) => p.id === white!.id)!.alive).toBe(false);
+    expect(g.awaitingWhiteGuess).toBe(false);
+  });
+});
+
+describe('special role: Serial Killer', () => {
+  // 6 players: 1 undercover + 1 killer, 4 civilians (4 > 1+1+1 ✓).
+  function withKiller(seed = 13): GameState {
+    let s = newGame(['A', 'B', 'C', 'D', 'E', 'F'], 1, 0, seed, {}, { killer: 1 });
+    s = reducer(s, { type: 'REVEAL_DONE' });
+    return s;
+  }
+
+  it('holds the real civilian word and exactly one exists', () => {
+    const s = withKiller();
+    const killers = s.players.filter((p) => p.role === 'killer');
+    expect(killers).toHaveLength(1);
+    expect(killers[0].word).toBe('Apple');
+  });
+
+  it('night falls after a vote while the killer lives', () => {
+    let s = withKiller();
+    const civ = livingPlayers(s).find((p) => p.role === 'civilian')!;
+    s = voteOut(s, civ.id);
+    expect(s.phase).toBe('elimination');
+    s = reducer(s, { type: 'NEXT_ROUND' });
+    expect(s.phase).toBe('night');
+  });
+
+  it('a murder is found at dawn — no White guess, no revenge, but heartbreak', () => {
+    let s = newGame(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'], 1, 1, 21, {}, { killer: 1, lovers: true });
+    s = reducer(s, { type: 'REVEAL_DONE' });
+    const civ = livingPlayers(s).find((p) => p.role === 'civilian' && !p.loverId)!;
+    s = voteOut(s, civ.id);
+    s = reducer(s, { type: 'NEXT_ROUND' });
+    expect(s.phase).toBe('night');
+
+    const white = s.players.find((p) => p.role === 'white')!;
+    s = reducer(s, { type: 'NIGHT_RESOLVE', victimId: white.id });
+    expect(s.phase).toBe('elimination');
+    expect(s.players.find((p) => p.id === white.id)!.alive).toBe(false);
+    expect(s.awaitingWhiteGuess).toBe(false); // murdered, not voted out
+    expect(s.history.find((e) => e.playerId === white.id)!.cause).toBe('murder');
+    // a bound lover falls too
+    if (white.loverId) {
+      expect(s.players.find((p) => p.id === white.loverId)!.alive).toBe(false);
+    }
+  });
+
+  it('a quiet night leaves no body and the game moves on', () => {
+    let s = withKiller();
+    const civ = livingPlayers(s).find((p) => p.role === 'civilian')!;
+    s = voteOut(s, civ.id);
+    s = reducer(s, { type: 'NEXT_ROUND' });
+    s = reducer(s, { type: 'NIGHT_RESOLVE', victimId: null });
+    expect(s.phase).toBe('elimination');
+    expect(s.quietNight).toBe(true);
+    expect(s.lastEliminatedIds).toEqual([]);
+    const round = s.round;
+    s = reducer(s, { type: 'NEXT_ROUND' });
+    expect(s.phase).toBe('clues'); // one night per round — no second hunt
+    expect(s.round).toBe(round + 1);
+  });
+
+  it('no team can win while the killer lives; killer wins at the final 2', () => {
+    let s = withKiller();
+    // Kill the undercover: normally civilians would win, but the killer lives.
+    const und = s.players.find((p) => p.role === 'undercover')!;
+    s = { ...s, players: s.players.map((p) => (p.id === und.id ? { ...p, alive: false } : p)) };
+    expect(checkWinner(s)).toBeNull();
+
+    // Cut down to killer + 1 civilian → killer outlasts everyone.
+    const killer = s.players.find((p) => p.role === 'killer')!;
+    const lastCiv = s.players.filter((p) => p.alive && p.role === 'civilian')[0];
+    s = {
+      ...s,
+      players: s.players.map((p) =>
+        p.id === killer.id || p.id === lastCiv.id ? p : { ...p, alive: false },
+      ),
+    };
+    expect(checkWinner(s)).toBe('killer');
+  });
+
+  it('once the killer is voted out, normal wins resume and nights stop', () => {
+    let s = withKiller();
+    const killer = s.players.find((p) => p.role === 'killer')!;
+    s = voteOut(s, killer.id);
+    expect(s.phase).toBe('elimination');
+    expect(s.winner).toBeNull(); // undercover still alive
+    s = reducer(s, { type: 'NEXT_ROUND' });
+    expect(s.phase).toBe('clues'); // no night without a living killer
+  });
+
+  it('validateCounts caps the killer and keeps the majority', () => {
+    expect(validateCounts(6, 1, 0, 0, 1).ok).toBe(true); // 4 civ vs 1+1
+    expect(validateCounts(6, 1, 0, 0, 2).ok).toBe(false); // two killers
+    expect(validateCounts(4, 1, 0, 0, 1).ok).toBe(false); // 2 civ vs 1+1 — no majority
   });
 });
 

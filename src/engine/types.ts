@@ -1,6 +1,6 @@
 // Pure, framework-agnostic game types. No React, no DOM.
 
-export type Role = 'civilian' | 'undercover' | 'white';
+export type Role = 'civilian' | 'undercover' | 'white' | 'revenger' | 'killer';
 
 export type Phase =
   | 'setup'
@@ -10,14 +10,20 @@ export type Phase =
   | 'vote'
   | 'elimination'
   | 'whiteGuess'
+  | 'revenge'
+  | 'night'
   | 'gameOver';
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
-export type Winner = 'civilians' | 'imposters' | 'white';
+export type Winner = 'civilians' | 'imposters' | 'white' | 'killer';
 
 export type TieRule = 'revote' | 'suddenDeath' | 'noElim';
 export type WhiteMatch = 'exact' | 'lenient' | 'fuzzy';
+
+/** How a player left the game. Only 'vote' triggers Mr. White's guess or the
+ *  Revenger's revenge — revenge, murder and heartbreak deaths get no last words. */
+export type EliminationCause = 'vote' | 'revenge' | 'heartbreak' | 'murder';
 
 export interface Player {
   id: string;
@@ -26,6 +32,8 @@ export interface Player {
   word: string | null; // null for Mr. White
   alive: boolean;
   seat: number; // shuffled order
+  /** set when the Lovers variant is on and this player is one of the pair */
+  loverId?: string | null;
 }
 
 export interface GameRules {
@@ -42,7 +50,9 @@ export interface GameRules {
 export interface GameConfig {
   packId: string;
   difficulty: Difficulty;
-  counts: { undercover: number; white: number }; // civilians derived
+  counts: { undercover: number; white: number; revenger?: number; killer?: number }; // civilians derived
+  /** Lovers variant: two random players are secretly bound; if one falls, both fall. */
+  lovers?: boolean;
   rules: GameRules;
 }
 
@@ -50,7 +60,7 @@ export interface EliminationEvent {
   round: number;
   playerId: string;
   role: Role;
-  byVote: boolean;
+  cause: EliminationCause;
 }
 
 export interface GameState {
@@ -64,6 +74,8 @@ export interface GameState {
   currentSpeakerId: string | null;
   votes: Record<string, string>; // voterId -> targetId
   lastEliminatedId: string | null;
+  /** every death from the last resolution, in order (vote target, heartbreak, …) */
+  lastEliminatedIds: string[];
   winner: Winner | null;
   history: EliminationEvent[];
   /** ids tied in the current vote, when a tie is being resolved */
@@ -72,6 +84,12 @@ export interface GameState {
   revoteUsed: boolean;
   /** set when an eliminated Mr. White still owes their one guess */
   awaitingWhiteGuess: boolean;
+  /** set when a voted-out Revenger still owes their revenge pick */
+  awaitingRevengeBy: string | null;
+  /** the round whose night has already been resolved (guards one night per round) */
+  lastNightRound: number;
+  /** true when the last night passed without a murder */
+  quietNight: boolean;
 }
 
 export interface WordPair {
@@ -109,5 +127,8 @@ export type Action =
   // resolve directly; otherwise the stored per-voter `votes` are used.
   | { type: 'RESOLVE_VOTE'; counts?: Record<string, number>; rng?: () => number }
   | { type: 'WHITE_GUESS'; guess: string }
+  | { type: 'REVENGE'; targetId: string } // voted-out Revenger picks who falls with them
+  // End of the night pass-around: the Serial Killer's pick (null = stayed quiet).
+  | { type: 'NIGHT_RESOLVE'; victimId: string | null }
   | { type: 'NEXT_ROUND' } // from elimination → next clues round
   | { type: 'RESET' };

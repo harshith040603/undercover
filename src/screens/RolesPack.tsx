@@ -92,15 +92,16 @@ export function RolesPack() {
 
   // Auto-assign the balanced ratio whenever the player count changes
   // (PRD §2.5). The host can still override with the steppers afterwards.
+  // Specials reset to opt-in defaults so the base ratio stays valid.
   useEffect(() => {
     if (draft.countFor !== total) {
       const d = defaultDistribution(total);
-      setDraft({ undercover: d.undercover, white: d.white, countFor: total });
+      setDraft({ undercover: d.undercover, white: d.white, revenger: 0, killer: 0, countFor: total });
     }
   }, [total, draft.countFor, setDraft]);
 
-  const civilians = total - draft.undercover - draft.white;
-  const check = validateCounts(total, draft.undercover, draft.white);
+  const civilians = total - draft.undercover - draft.white - draft.revenger - draft.killer;
+  const check = validateCounts(total, draft.undercover, draft.white, draft.revenger, draft.killer);
 
   const start = () => {
     if (!check.ok) return;
@@ -151,6 +152,64 @@ export function RolesPack() {
                 ? 'Civilians hold a strict majority. Good to go.'
                 : check.reason}
             </p>
+          </div>
+        </section>
+
+        {/* Special roles */}
+        <section>
+          <SectionTab>Special roles</SectionTab>
+          <div className="space-y-2 rounded-b-card rounded-tr-card border border-ink/25 bg-paper/40 p-2">
+            <Stepper
+              label="Revenger"
+              mark={<span aria-hidden className="inline-block h-3 w-3 shrink-0 rotate-45 bg-undercover" />}
+              value={draft.revenger}
+              onChange={(v) => setDraft({ revenger: v })}
+              min={0}
+              max={1}
+              accent="var(--color-undercover)"
+            />
+            <p className="px-2 text-xs text-ink/50">
+              Plays with the imposter word. Voted out, they drag one player down with them.
+            </p>
+
+            <Stepper
+              label="Serial Killer"
+              mark={<span aria-hidden className="inline-block h-3 w-3 shrink-0 rotate-45 bg-ink" />}
+              value={draft.killer}
+              onChange={(v) => setDraft({ killer: v })}
+              min={0}
+              max={1}
+              accent="var(--color-ink)"
+            />
+            <p className="px-2 text-xs text-ink/50">
+              Holds the real word and hunts alone: one victim each night. Playing on their own
+              side — vote them out before they outlast you.
+            </p>
+
+            <button
+              onClick={() => {
+                haptic('tick');
+                setDraft({ lovers: !draft.lovers });
+              }}
+              className="sheet flex w-full items-center justify-between gap-4 rounded-card px-4 py-3 text-left"
+            >
+              <span>
+                <span className="block text-sm font-bold text-ink">Lovers</span>
+                <span className="block text-xs text-ink/50">
+                  Two players are secretly bound — any roles. If one falls, both fall.
+                </span>
+              </span>
+              <span
+                aria-hidden
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.25rem] border-2 font-display text-xl leading-none transition ${
+                  draft.lovers
+                    ? 'border-undercover bg-undercover text-paper'
+                    : 'border-ink/35 text-transparent'
+                }`}
+              >
+                ✕
+              </span>
+            </button>
           </div>
         </section>
 

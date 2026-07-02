@@ -8,6 +8,8 @@ import { Debate } from './phases/Debate';
 import { Vote } from './phases/Vote';
 import { Elimination } from './phases/Elimination';
 import { WhiteGuess } from './phases/WhiteGuess';
+import { Revenge } from './phases/Revenge';
+import { Night } from './phases/Night';
 import { Win } from './phases/Win';
 
 export function Play() {
@@ -39,6 +41,8 @@ export function Play() {
         {phase === 'vote' && <Vote />}
         {phase === 'elimination' && <Elimination />}
         {phase === 'whiteGuess' && <WhiteGuess />}
+        {phase === 'revenge' && <Revenge />}
+        {phase === 'night' && <Night />}
         {phase === 'gameOver' && <Win />}
       </motion.div>
     </AnimatePresence>

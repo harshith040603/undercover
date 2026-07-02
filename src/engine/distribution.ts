@@ -38,25 +38,32 @@ export function defaultDistribution(playerCount: number): Distribution {
 
 /**
  * Validate a custom distribution against the hard constraints (PRD §2.5):
- * - civilians >= undercover + white + 1  (strict majority)
- * - at least 1 civilian and at least 1 imposter
+ * - civilians >= everyone else + 1  (strict majority)
+ * - at least 1 civilian and at least 1 word imposter (the Killer holds the
+ *   real word, so a Killer-only game would have no word gap to hunt)
+ * - at most 1 Revenger and at most 1 Serial Killer
  */
 export function validateCounts(
   playerCount: number,
   undercover: number,
   white: number,
+  revenger = 0,
+  killer = 0,
 ): { ok: boolean; reason?: string } {
   if (playerCount < MIN_PLAYERS) return { ok: false, reason: `Need at least ${MIN_PLAYERS} players.` };
   if (playerCount > MAX_PLAYERS) return { ok: false, reason: `Max ${MAX_PLAYERS} players.` };
-  if (undercover < 0 || white < 0) return { ok: false, reason: 'Counts cannot be negative.' };
+  if (undercover < 0 || white < 0 || revenger < 0 || killer < 0)
+    return { ok: false, reason: 'Counts cannot be negative.' };
+  if (revenger > 1) return { ok: false, reason: 'At most 1 Revenger.' };
+  if (killer > 1) return { ok: false, reason: 'At most 1 Serial Killer.' };
 
-  const imposters = undercover + white;
-  const civilians = playerCount - imposters;
+  const imposters = undercover + white + revenger;
+  const civilians = playerCount - imposters - killer;
 
   if (imposters < 1) return { ok: false, reason: 'Need at least 1 imposter.' };
   if (civilians < 1) return { ok: false, reason: 'Need at least 1 civilian.' };
-  if (civilians < imposters + 1) {
-    return { ok: false, reason: 'Civilians must outnumber imposters.' };
+  if (civilians < imposters + killer + 1) {
+    return { ok: false, reason: 'Civilians must outnumber everyone else.' };
   }
   return { ok: true };
 }

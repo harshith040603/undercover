@@ -12,6 +12,8 @@ const ROLE_LABEL: Record<Player['role'], string> = {
   civilian: 'You are a Civilian',
   undercover: 'You are a Civilian', // Undercover only sees their word — doubt is the game (PRD §2.1)
   white: 'You are Mr. White',
+  revenger: 'You are the Revenger',
+  killer: 'You are the Serial Killer',
 };
 
 export function Reveal() {
@@ -31,6 +33,7 @@ export function Reveal() {
 
   const player = order[idx];
   const isLast = idx === order.length - 1;
+  const lover = player.loverId ? game.players.find((p) => p.id === player.loverId) : undefined;
 
   const startPeek = () => {
     haptic('tick');
@@ -133,7 +136,10 @@ export function Reveal() {
                 className="flex flex-col items-center gap-4"
               >
                 <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-ink/50">
-                  {blind ? 'Your word' : ROLE_LABEL[player.role]}
+                  {/* Revenger and Killer always know their role — theirs are active powers. */}
+                  {blind && player.role !== 'revenger' && player.role !== 'killer'
+                    ? 'Your word'
+                    : ROLE_LABEL[player.role]}
                 </span>
                 {player.role === 'white' ? (
                   <span className="border-2 border-dashed border-ink/40 px-4 py-2 font-display text-2xl text-ink/50">
@@ -147,6 +153,23 @@ export function Reveal() {
                 {player.role === 'white' && (
                   <span className="max-w-[12rem] text-xs text-ink/55">
                     You get no word. Listen, blend in, and reconstruct it.
+                  </span>
+                )}
+                {player.role === 'revenger' && (
+                  <span className="max-w-[12rem] text-xs font-bold text-undercover">
+                    If the table votes you out, you drag one player down with you.
+                  </span>
+                )}
+                {player.role === 'killer' && (
+                  <span className="max-w-[12rem] text-xs font-bold text-ink">
+                    This is the real word. Each night, your dream visit kills. Win by
+                    outlasting everyone.
+                  </span>
+                )}
+                {lover && (
+                  <span className="max-w-[12rem] border-t border-dashed border-ink/30 pt-2 text-xs text-ink/60">
+                    Bound to <span className="font-bold text-ink">{lover.name}</span>. If they
+                    fall, you fall.
                   </span>
                 )}
               </motion.div>

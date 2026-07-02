@@ -39,6 +39,12 @@ export interface SetupDraft {
   difficulty: Difficulty;
   undercover: number;
   white: number;
+  /** special role: 0 or 1 Revenger (imposter team) */
+  revenger: number;
+  /** special role: 0 or 1 Serial Killer (solo faction, hunts at night) */
+  killer: number;
+  /** special variant: two random players are secretly bound */
+  lovers: boolean;
   /** player count the undercover/white counts were derived for (auto-sync guard) */
   countFor: number;
 }
@@ -66,6 +72,9 @@ const DEFAULT_DRAFT: SetupDraft = {
   difficulty: 'normal',
   undercover: 1,
   white: 0,
+  revenger: 0,
+  killer: 0,
+  lovers: false,
   countFor: 0, // 0 forces a re-sync on first visit to the roles screen
 };
 
@@ -73,7 +82,13 @@ function buildConfig(draft: SetupDraft, rules: GameRules): GameConfig {
   return {
     packId: draft.packId,
     difficulty: draft.difficulty,
-    counts: { undercover: draft.undercover, white: draft.white },
+    counts: {
+      undercover: draft.undercover,
+      white: draft.white,
+      revenger: draft.revenger,
+      killer: draft.killer,
+    },
+    lovers: draft.lovers,
     rules,
   };
 }

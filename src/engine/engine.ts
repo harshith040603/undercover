@@ -1,5 +1,6 @@
 import type {
   Action,
+  EliminationCause,
   GameState,
   NewGameInput,
   Player,
@@ -22,19 +23,26 @@ export function livingPlayers(s: GameState): Player[] {
 
 function livingByRole(s: GameState) {
   const alive = livingPlayers(s);
-  const imposters = alive.filter((p) => p.role !== 'civilian');
+  const killer = alive.filter((p) => p.role === 'killer');
+  const imposters = alive.filter((p) => p.role !== 'civilian' && p.role !== 'killer');
   const civilians = alive.filter((p) => p.role === 'civilian');
-  return { alive, imposters, civilians };
+  return { alive, killer, imposters, civilians };
 }
 
 /**
  * Win check (PRD §2.6), excluding the Mr. White instant-win which is
  * resolved separately in the guess sub-phase.
- *   - civilians win when no imposters remain
+ *   - the Serial Killer (solo faction) wins by outlasting: alive at the final 2
+ *   - while the Killer lives, no team can close the game — find them first
+ *   - civilians win when no imposters (and no killer) remain
  *   - imposters win when living imposters >= living civilians (parity)
+ * The Revenger counts as an imposter; the Killer counts for neither team.
  */
 export function checkWinner(s: GameState): Winner | null {
-  const { imposters, civilians } = livingByRole(s);
+  const { alive, killer, imposters, civilians } = livingByRole(s);
+  if (killer.length > 0) {
+    return alive.length <= 2 ? 'killer' : null;
+  }
   if (imposters.length === 0) return 'civilians';
   if (imposters.length >= civilians.length) return 'imposters';
   return null;
@@ -76,14 +84,22 @@ export function createGame(input: NewGameInput): GameState {
 
   const undercoverN = config.counts.undercover;
   const whiteN = config.counts.white;
+  const revengerN = config.counts.revenger ?? 0;
+  const killerN = config.counts.killer ?? 0;
   const total = names.length;
-  const civilianN = total - undercoverN - whiteN;
+  const civilianN = total - undercoverN - whiteN - revengerN - killerN;
 
   // Build the role bag, then shuffle it across players.
+  // The Revenger plays with the undercover word — a second-word imposter
+  // who additionally knows their role (revenge is an active power).
+  // The Serial Killer holds the real civilian word: undetectable by clues,
+  // hunted only by behavior.
   const roleBag: Role[] = [
     ...Array<Role>(civilianN).fill('civilian'),
     ...Array<Role>(undercoverN).fill('undercover'),
     ...Array<Role>(whiteN).fill('white'),
+    ...Array<Role>(revengerN).fill('revenger'),
+    ...Array<Role>(killerN).fill('killer'),
   ];
   const shuffledRoles = shuffle(roleBag, rng);
 
@@ -96,7 +112,11 @@ export function createGame(input: NewGameInput): GameState {
   const players: Player[] = names.map((name, i) => {
     const role = shuffledRoles[i];
     const word =
-      role === 'civilian' ? pair.civilian : role === 'undercover' ? pair.undercover : null;
+      role === 'civilian' || role === 'killer'
+        ? pair.civilian
+        : role === 'white'
+          ? null
+          : pair.undercover;
     return {
       id: uid(),
       name: name.trim() || `Player ${i + 1}`,
@@ -104,8 +124,16 @@ export function createGame(input: NewGameInput): GameState {
       word,
       alive: true,
       seat: seats[i],
+      loverId: null,
     };
   });
+
+  // Lovers variant: bind two random players (any roles, cross-team allowed).
+  if (config.lovers && players.length >= 2) {
+    const [a, b] = shuffle(players, rng);
+    a.loverId = b.id;
+    b.loverId = a.id;
+  }
 
   const base: GameState = {
     phase: 'reveal',
@@ -118,11 +146,15 @@ export function createGame(input: NewGameInput): GameState {
     currentSpeakerId: null,
     votes: {},
     lastEliminatedId: null,
+    lastEliminatedIds: [],
     winner: null,
     history: [],
     tiedIds: [],
     revoteUsed: false,
     awaitingWhiteGuess: false,
+    awaitingRevengeBy: null,
+    lastNightRound: 0,
+    quietNight: false,
   };
   base.firstSpeakerId = chooseFirstSpeaker(base, rng);
   return base;
@@ -181,7 +213,7 @@ export function reducer(state: GameState, action: Action): GameState {
       if (top.length !== 1) {
         return resolveTie(state, top, rng);
       }
-      return eliminate(state, top[0], true);
+      return eliminate(state, top[0], 'vote');
     }
 
     case 'WHITE_GUESS': {
@@ -200,13 +232,50 @@ export function reducer(state: GameState, action: Action): GameState {
       return { ...cleared, winner, phase: winner ? 'gameOver' : 'elimination' };
     }
 
+    case 'REVENGE': {
+      if (state.phase !== 'revenge') return state;
+      const target = state.players.find((p) => p.id === action.targetId);
+      if (!target?.alive) return state;
+      // Revenge is not a vote: a dragged-down Mr. White gets no guess, and
+      // there is at most one Revenger, so revenge can never chain.
+      return eliminate({ ...state, awaitingRevengeBy: null }, action.targetId, 'revenge');
+    }
+
+    case 'NIGHT_RESOLVE': {
+      if (state.phase !== 'night') return state;
+      const marked = { ...state, lastNightRound: state.round };
+      // The Killer stayed quiet: dawn breaks with no body.
+      if (!action.victimId) {
+        return {
+          ...marked,
+          phase: 'elimination',
+          quietNight: true,
+          lastEliminatedId: null,
+          lastEliminatedIds: [],
+        };
+      }
+      const victim = state.players.find((p) => p.id === action.victimId);
+      if (!victim?.alive) return state;
+      return eliminate(marked, action.victimId, 'murder');
+    }
+
     case 'NEXT_ROUND': {
       if (state.phase !== 'elimination') return state;
-      // An eliminated Mr. White owes a guess before anything else.
+      // An eliminated Mr. White owes a guess before anything else…
       if (state.awaitingWhiteGuess) {
         return { ...state, phase: 'whiteGuess' };
       }
+      // …and a voted-out Revenger owes their revenge.
+      if (state.awaitingRevengeBy) {
+        return { ...state, phase: 'revenge' };
+      }
       if (state.winner) return { ...state, phase: 'gameOver' };
+
+      // A living Serial Killer hunts once per round, after the vote resolves.
+      const killerAlive = state.players.some((p) => p.alive && p.role === 'killer');
+      if (killerAlive && (state.lastNightRound ?? 0) < state.round) {
+        return { ...state, phase: 'night', quietNight: false };
+      }
 
       const rng = defaultRng;
       const next: GameState = {
@@ -217,6 +286,8 @@ export function reducer(state: GameState, action: Action): GameState {
         tiedIds: [],
         revoteUsed: false,
         lastEliminatedId: null,
+        lastEliminatedIds: [],
+        quietNight: false,
       };
       next.firstSpeakerId = chooseFirstSpeaker(next, rng);
       next.currentSpeakerId = next.firstSpeakerId;
@@ -233,29 +304,53 @@ export function reducer(state: GameState, action: Action): GameState {
 
 // ─── Elimination & tie resolution ──────────────────────────────
 
-function eliminate(state: GameState, targetId: string, byVote: boolean): GameState {
+/**
+ * Kill `targetId` (and their heartbroken lover, if any), then decide what the
+ * table owes before a winner can be declared:
+ *   - voted-out Mr. White → one guess (PRD §2.6 #1)
+ *   - voted-out Revenger  → one revenge pick
+ * Heartbreak, revenge and murder deaths trigger neither — no last words.
+ */
+function eliminate(
+  state: GameState,
+  targetId: string,
+  cause: 'vote' | 'revenge' | 'murder',
+): GameState {
   const target = state.players.find((p) => p.id === targetId);
-  if (!target) return state;
+  if (!target?.alive) return state;
 
-  const players = state.players.map((p) =>
-    p.id === targetId ? { ...p, alive: false } : p,
-  );
+  const deaths: { player: Player; cause: EliminationCause }[] = [{ player: target, cause }];
+  const lover = target.loverId ? state.players.find((p) => p.id === target.loverId) : undefined;
+  if (lover?.alive) deaths.push({ player: lover, cause: 'heartbreak' });
+
+  const deadIds = new Set(deaths.map((d) => d.player.id));
+  const players = state.players.map((p) => (deadIds.has(p.id) ? { ...p, alive: false } : p));
+
   const next: GameState = {
     ...state,
     players,
     phase: 'elimination',
     lastEliminatedId: targetId,
+    lastEliminatedIds: deaths.map((d) => d.player.id),
     tiedIds: [],
     revoteUsed: false,
+    quietNight: false,
     history: [
       ...state.history,
-      { round: state.round, playerId: targetId, role: target.role, byVote },
+      ...deaths.map((d) => ({
+        round: state.round,
+        playerId: d.player.id,
+        role: d.player.role,
+        cause: d.cause,
+      })),
     ],
   };
 
-  // Mr. White earns one guess before any win is declared (PRD §2.6 #1).
-  if (target.role === 'white') {
+  if (cause === 'vote' && target.role === 'white') {
     return { ...next, awaitingWhiteGuess: true, winner: null };
+  }
+  if (cause === 'vote' && target.role === 'revenger') {
+    return { ...next, awaitingRevengeBy: targetId, winner: null };
   }
 
   next.winner = checkWinner(next);
@@ -268,6 +363,7 @@ function resolveTie(state: GameState, top: string[], rng: Rng): GameState {
     ...state,
     phase: 'elimination',
     lastEliminatedId: null,
+    lastEliminatedIds: [],
     tiedIds: [],
     revoteUsed: false,
     winner: checkWinner(state),
@@ -285,7 +381,7 @@ function resolveTie(state: GameState, top: string[], rng: Rng): GameState {
 
   // Still tied after the revote → break it (suddenDeath) or skip (revote).
   if (rule === 'suddenDeath') {
-    return eliminate(state, pick(top, rng), true);
+    return eliminate(state, pick(top, rng), 'vote');
   }
   return noElimination();
 }
